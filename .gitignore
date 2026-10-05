@@ -1,0 +1,25 @@
+# Dependencias y build
+node_modules/
+dist/
+dist-ssr/
+
+# Entorno
+.env
+.env.local
+.env.*.local
+
+# Datos del panel (se generan al guardar)
+server/data/content.backup.json
+server/data/*.tmp
+
+# Credenciales privadas: contraseña hasheada y topic de ntfy
+server/data/credentials.json
+
+# Imágenes subidas desde el editor
+server/uploads/
+
+# Temporales
+cookies.txt
+*.log
+.DS_Store
+Thumbs.db
