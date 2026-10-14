@@ -1,0 +1,918 @@
+@import "../config/config.css";
+
+/* ==========================================================================
+   Edición en contexto — controles dentro de la propia web
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Botones pequeños que viven sobre el contenido
+   -------------------------------------------------------------------------- */
+
+.edit-btn,
+.edit-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  height: 1.75rem;
+  padding: 0 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 0.35rem;
+  background: rgba(12, 11, 16, 0.82);
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  transition:
+    border-color 0.2s,
+    color 0.2s,
+    background 0.2s,
+    opacity 0.2s;
+}
+
+.edit-btn svg {
+  width: 0.72rem;
+  height: 0.72rem;
+  flex: none;
+}
+
+.edit-btn:hover,
+.edit-add:hover {
+  border-color: var(--accent);
+  background: #171b12;
+  color: var(--accent);
+}
+
+.edit-btn:active,
+.edit-add:active {
+  transform: translateY(1px);
+}
+
+.edit-add {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  color: var(--accent);
+}
+
+.edit-add > span {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.edit-add:hover {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+/* Los controles de cada elemento aparecen solo al pasar el cursor. */
+.edit-hover {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.work__row:hover .edit-hover,
+.work__more-item:hover .edit-hover,
+.stack__card:hover .edit-hover,
+.journey__item:hover .edit-hover,
+.contact__list li:hover .edit-hover,
+.player-card__avatar:hover .edit-hover,
+.edit-hover:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (hover: none) {
+  .edit-hover {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+/* Posición compacta de los controles sobre cada elemento. */
+.work__edit {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  z-index: 4;
+}
+
+.work__more-edit,
+.contact__social-edit {
+  flex: none;
+}
+
+.stack__edit,
+.journey__edit {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 2;
+}
+
+.work__edit span,
+.work__more-edit span,
+.stack__edit span,
+.journey__edit span,
+.contact__social-edit span {
+  display: none;
+}
+
+.is-editing .stack__card header {
+  padding-right: 2.3rem;
+}
+
+.is-editing .journey__item {
+  padding-right: 2.8rem;
+}
+
+/* Barra de acciones de una sección. Solo existe en modo edición. */
+.edit-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  padding: 0.45rem;
+  border: 1px dashed color-mix(in srgb, var(--accent) 28%, transparent);
+  border-radius: 0.5rem;
+  background: rgba(12, 11, 16, 0.5);
+}
+
+.edit-bar__label {
+  margin-right: 0.3rem;
+  padding-inline: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.edit-section-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+
+.edit-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding-bottom: 0.2rem;
+}
+
+/* --------------------------------------------------------------------------
+   Toolbar fija
+   -------------------------------------------------------------------------- */
+
+.edit-toolbar {
+  position: fixed;
+  left: 50%;
+  bottom: 0.9rem;
+  z-index: 230;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  width: min(calc(100% - 2rem), 780px);
+  padding: 0.55rem 0.65rem 0.55rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 0.65rem;
+  background: rgba(15, 14, 19, 0.94);
+  box-shadow:
+    0 18px 60px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  transform: translateX(-50%);
+  animation: edit-toolbar-in 0.35s var(--ease-out);
+}
+
+@keyframes edit-toolbar-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 14px);
+  }
+}
+
+.edit-toolbar__state {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.edit-toolbar__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: none;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.edit-toolbar__dot.is-dirty {
+  background: var(--coral);
+  box-shadow: 0 0 0 4px rgba(255, 122, 102, 0.12);
+}
+
+.edit-toolbar__dot.is-saving {
+  animation: edit-pulse 0.9s ease-in-out infinite;
+}
+
+@keyframes edit-pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.edit-toolbar__label {
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.edit-toolbar__hint {
+  padding: 0.12rem 0.3rem;
+  border: 1px solid var(--line-soft);
+  border-radius: 0.2rem;
+  font-family: var(--font-mono);
+  font-size: 0.46rem;
+  letter-spacing: 0.04em;
+  color: var(--ink-4);
+  white-space: nowrap;
+}
+
+.edit-toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.edit-toolbar__error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 300px;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid rgba(255, 122, 102, 0.4);
+  border-radius: 0.35rem;
+  background: rgba(255, 122, 102, 0.1);
+  font-size: 0.68rem;
+  line-height: 1.35;
+  color: #ffb3a8;
+}
+
+.edit-toolbar__error button {
+  flex: none;
+  font-size: 1rem;
+  line-height: 1;
+  color: #ffb3a8;
+}
+
+html.is-editing .block {
+  overflow: visible;
+}
+
+html.is-editing .footer {
+  padding-bottom: 5.4rem;
+}
+
+/* --------------------------------------------------------------------------
+   Drawer lateral de edición
+   -------------------------------------------------------------------------- */
+
+.edit-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 240;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.edit-drawer__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 4, 8, 0.68);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: edit-fade-in 0.25s ease-out;
+}
+
+@keyframes edit-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.edit-drawer__panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 620px);
+  height: 100%;
+  border-left: 1px solid var(--line);
+  background:
+    radial-gradient(70% 40% at 100% 0%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 62%),
+    #0f0e13;
+  box-shadow: -30px 0 90px rgba(0, 0, 0, 0.55);
+  animation: edit-drawer-in 0.4s var(--ease-out);
+}
+
+@keyframes edit-drawer-in {
+  from {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+}
+
+.edit-drawer__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.2rem 1.2rem 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.edit-drawer__eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.edit-drawer__title {
+  margin-top: 0.25rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-weight: 780;
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+
+.edit-drawer__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1.2rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+.edit-drawer__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1.2rem;
+  border-top: 1px solid var(--line);
+  background: rgba(12, 11, 16, 0.75);
+}
+
+.edit-drawer__foot p {
+  max-width: 38ch;
+  font-size: 0.68rem;
+  line-height: 1.45;
+  color: var(--ink-4);
+}
+
+.edit-drawer__foot p b {
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+.edit-drawer__foot-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: none;
+}
+
+.edit-modal__close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--line);
+  border-radius: 0.35rem;
+  font-family: var(--font-sans);
+  font-size: 1.15rem;
+  line-height: 1;
+  color: var(--ink-3);
+  transition:
+    border-color 0.2s,
+    color 0.2s,
+    background 0.2s;
+}
+
+.edit-modal__close:hover {
+  border-color: var(--coral);
+  background: rgba(255, 122, 102, 0.08);
+  color: var(--coral);
+}
+
+/* --------------------------------------------------------------------------
+   Modales de acceso y selector de imagen
+   -------------------------------------------------------------------------- */
+
+.edit-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.edit-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 4, 8, 0.76);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: edit-fade-in 0.25s ease-out;
+}
+
+.edit-modal__card {
+  position: relative;
+  width: min(100%, 540px);
+  max-height: calc(100svh - 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1.3rem;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background:
+    radial-gradient(80% 50% at 100% 0%, rgba(130, 199, 255, 0.08), transparent 62%),
+    #131119;
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.6);
+  animation: edit-modal-in 0.35s var(--ease-out);
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+@keyframes edit-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+}
+
+.edit-modal__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.edit-modal__eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.edit-modal__title {
+  margin-top: 0.2rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 780;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+
+.edit-modal__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+/* Acceso */
+
+.edit-gate__card {
+  width: min(100%, 460px);
+  padding: 1.5rem;
+}
+
+.edit-gate__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.2rem;
+}
+
+.edit-gate__mark {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 0.45rem;
+  background: var(--accent);
+  color: #14120f;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.06em;
+  box-shadow: 3px 3px 0 var(--coral);
+}
+
+.edit-gate__title {
+  margin-top: 0.2rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 5vw, 2.5rem);
+  font-weight: 800;
+  line-height: 0.98;
+  letter-spacing: -0.05em;
+}
+
+.edit-gate__lead {
+  margin-block: 0.6rem 1.1rem;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--ink-3);
+}
+
+.edit-gate__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.edit-gate__code {
+  font-family: var(--font-mono);
+  font-size: 1.35rem;
+  letter-spacing: 0.35em;
+  text-align: center;
+}
+
+.edit-gate__notice {
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--accent);
+}
+
+.edit-gate__debug {
+  padding: 0.55rem 0.65rem;
+  border: 1px dashed rgba(130, 199, 255, 0.45);
+  border-radius: 0.35rem;
+  background: rgba(130, 199, 255, 0.08);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--sky);
+}
+
+.edit-gate__debug b {
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+}
+
+.edit-gate__links {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.15rem;
+}
+
+.edit-gate__link {
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  transition: color 0.2s;
+}
+
+.edit-gate__link:hover {
+  color: var(--accent);
+}
+
+.edit-gate__link:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.edit-gate__foot {
+  margin-top: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line-soft);
+  font-size: 0.68rem;
+  line-height: 1.5;
+  color: var(--ink-4);
+}
+
+/* Selector de imagen */
+
+.edit-image-picker {
+  width: min(100%, 560px);
+}
+
+.edit-tabs {
+  display: flex;
+  gap: 0.3rem;
+  margin-bottom: 0.9rem;
+  padding: 0.2rem;
+  border: 1px solid var(--line);
+  border-radius: 0.45rem;
+  background: rgba(12, 11, 16, 0.6);
+}
+
+.edit-tab {
+  flex: 1;
+  height: 2rem;
+  border-radius: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+
+.edit-tab:hover {
+  color: var(--accent);
+}
+
+.edit-tab.is-active {
+  background: var(--accent);
+  color: #14120f;
+  font-weight: 700;
+}
+
+.edit-image-picker__preview {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  margin-bottom: 0.9rem;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 0.55rem;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      rgba(244, 240, 232, 0.025) 0 8px,
+      transparent 8px 16px
+    ),
+    var(--bg);
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+
+.edit-image-picker__preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.edit-dropzone {
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  padding: 1.2rem 1rem;
+  border: 1px dashed var(--line);
+  border-radius: 0.55rem;
+  background: rgba(12, 11, 16, 0.45);
+  text-align: center;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+
+.edit-dropzone:hover,
+.edit-dropzone:focus-within {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+}
+
+.edit-dropzone__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.edit-dropzone__title {
+  font-size: 0.8rem;
+  color: var(--ink-2);
+}
+
+.edit-dropzone__hint {
+  margin-bottom: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  letter-spacing: 0.04em;
+  color: var(--ink-4);
+}
+
+/* Campo de imagen dentro de los formularios */
+
+.edit-image-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.edit-image-field__row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.edit-image-field__preview {
+  display: grid;
+  place-items: center;
+  width: 8.5rem;
+  aspect-ratio: 16 / 10;
+  flex: none;
+  overflow: hidden;
+  border: 1px dashed var(--line);
+  border-radius: 0.45rem;
+  background: rgba(12, 11, 16, 0.55);
+  transition: border-color 0.2s;
+}
+
+.edit-image-field__preview:hover {
+  border-color: var(--accent);
+}
+
+.edit-image-field__preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.edit-image-field__empty {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  text-align: center;
+}
+
+.edit-image-field__empty small {
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-4);
+}
+
+.edit-image-field__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+/* --------------------------------------------------------------------------
+   Toast
+   -------------------------------------------------------------------------- */
+
+.edit-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 5.2rem;
+  z-index: 320;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  max-width: min(calc(100% - 2rem), 520px);
+  padding: 0.65rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: 0.5rem;
+  background: #161a12;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.5);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--accent);
+  transform: translateX(-50%);
+  animation: edit-toast-in 0.35s var(--ease-out);
+}
+
+.edit-toast__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: none;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+@keyframes edit-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Responsive
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 760px) {
+  .edit-toolbar {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    width: calc(100% - 1.2rem);
+    bottom: 0.6rem;
+    padding: 0.55rem 0.6rem;
+  }
+
+  .edit-toolbar__state {
+    width: 100%;
+  }
+
+  .edit-toolbar__hint {
+    margin-left: auto;
+  }
+
+  .edit-toolbar__actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .edit-toolbar__actions .cfg-btn {
+    flex: 1;
+  }
+
+  .edit-toolbar__error {
+    order: 3;
+    width: 100%;
+    max-width: none;
+  }
+
+  .edit-drawer__panel {
+    width: 100%;
+  }
+
+  .edit-drawer__head,
+  .edit-drawer__body {
+    padding-inline: 1rem;
+  }
+
+  .edit-drawer__foot {
+    flex-direction: column;
+    align-items: stretch;
+    padding-inline: 1rem;
+  }
+
+  .edit-drawer__foot-actions {
+    justify-content: flex-end;
+  }
+
+  .edit-image-field__row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .edit-image-field__preview {
+    width: 100%;
+  }
+
+  .edit-toast {
+    bottom: 8.5rem;
+  }
+
+  html.is-editing .footer {
+    padding-bottom: 8.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edit-toolbar,
+  .edit-drawer__panel,
+  .edit-modal__card,
+  .edit-toast {
+    animation: none;
+  }
+
+  .edit-toolbar__dot.is-saving {
+    animation: none;
+  }
+}
