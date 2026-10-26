@@ -16,6 +16,16 @@ if (!container) {
   throw new Error("No se encontró el nodo #root");
 }
 
+/*
+ * La antigua ruta /config ya no existe como pantalla aparte: la edición
+ * vive dentro de la propia web. Redirigimos sin recargar para que el acceso
+ * se abra directamente en modo edición.
+ */
+const path = window.location.pathname.replace(/\/+$/, "");
+if (path === "/config") {
+  window.history.replaceState({}, "", "/?edit=1");
+}
+
 createRoot(container).render(
   <StrictMode>
     <App />
