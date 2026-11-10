@@ -2,10 +2,10 @@ import { useEffect, useRef } from "react";
 
 /**
  * Campo de líneas generativo. 2D canvas, sin dependencias.
- * Se pausa fuera de pantalla, con la pestaña oculta y con reduced-motion.
  *
- * El puntero deforma las líneas a su alrededor, deja un halo de luz y
- * gana intensidad mientras más rápido se mueve el ratón.
+ * En reposo el dibujo está completamente quieto: solo reacciona (de forma
+ * suave) cuando el puntero se mueve, y se queda con el halo de luz alrededor
+ * del cursor. Se pausa con la pestaña oculta y con reduced-motion.
  */
 export function FlowField() {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -24,7 +24,6 @@ export function FlowField() {
       ty: 0.5,
       presence: 0,
       targetPresence: 0,
-      energy: 0,
     };
 
     let width = 0;
@@ -33,26 +32,25 @@ export function FlowField() {
     let onScreen = true;
     let running = false;
 
-    function draw(time: number) {
+    function draw() {
       if (!ctx || width === 0 || height === 0) return;
       ctx.clearRect(0, 0, width, height);
 
       const px = pointer.x * width;
       const py = pointer.y * height;
-      const reach = Math.max(220, Math.min(width, height) * 0.46);
+      const reach = Math.max(200, Math.min(width, height) * 0.42);
       const presence = pointer.presence;
-      const power = 1 + pointer.energy * 1.35;
 
-      /* Halo que sigue al cursor: hace evidente dónde está actuando. */
+      /* Halo suave que acompaña al cursor. */
       if (presence > 0.01) {
         const halo = ctx.createRadialGradient(px, py, 0, px, py, reach);
         halo.addColorStop(
           0,
-          `rgba(230, 195, 106, ${(0.2 * presence).toFixed(3)})`,
+          `rgba(230, 195, 106, ${(0.12 * presence).toFixed(3)})`,
         );
         halo.addColorStop(
-          0.42,
-          `rgba(130, 199, 255, ${(0.08 * presence).toFixed(3)})`,
+          0.45,
+          `rgba(130, 199, 255, ${(0.05 * presence).toFixed(3)})`,
         );
         halo.addColorStop(1, "rgba(130, 199, 255, 0)");
         ctx.fillStyle = halo;
@@ -72,44 +70,76 @@ export function FlowField() {
           const dy = base - py;
           const dist = Math.hypot(dx, dy);
           const near =
-            Math.exp(-Math.pow(dist / (reach * 0.55), 2)) *
-            presence *
-            power;
+            Math.exp(-Math.pow(dist / (reach * 0.62), 2)) * presence;
 
           const amplitude = 5 + 11 * Math.sin(i * 0.42 + 0.8);
-          const wave =
-            Math.sin(nx * 3.3 + time * 0.00013 + i * 0.22) * amplitude;
+          const wave = Math.sin(nx * 3.3 + i * 0.22) * amplitude;
           const bulge =
-            Math.exp(-Math.pow((nx - pointer.x) * 2.1, 2)) *
+            Math.exp(-Math.pow((nx - pointer.x) * 2.4, 2)) *
             (pointer.y - 0.5) *
-            230 *
-            power;
-          const pull = -dy * near * 0.6;
-          const ripple = near * Math.sin(time * 0.003 - dist * 0.022) * 24;
-          const y = base + wave + bulge + pull + ripple;
+            90 *
+            presence;
+          const pull = -dy * near * 0.22;
+          const y = base + wave + bulge + pull;
 
           if (x === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
         }
 
         const nearLine =
-          Math.exp(-Math.pow((base - py) / (height * 0.2), 2)) *
-          presence *
-          power;
+          Math.exp(-Math.pow((base - py) / (height * 0.2), 2)) * presence;
         const alpha =
           0.035 +
-          0.075 * (0.5 + 0.5 * Math.sin(i * 0.33 + time * 0.0002)) +
-          nearLine * 0.2;
+          0.075 * (0.5 + 0.5 * Math.sin(i * 0.33)) +
+          nearLine * 0.12;
         const palette = [
           [230, 195, 106],
           [130, 199, 255],
           [255, 122, 102],
         ];
         const [r, g, b] = palette[i % palette.length];
-        ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${Math.min(alpha, 0.34).toFixed(3)})`;
-        ctx.lineWidth = 1 + nearLine * 0.9;
+        ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${Math.min(alpha, 0.25).toFixed(3)})`;
+        ctx.lineWidth = 1 + nearLine * 0.5;
         ctx.stroke();
       }
+    }
+
+    function loop() {
+      const dx = pointer.tx - pointer.x;
+      const dy = pointer.ty - pointer.y;
+      const dp = pointer.targetPresence - pointer.presence;
+
+      pointer.x += dx * 0.18;
+      pointer.y += dy * 0.18;
+      pointer.presence += dp * 0.14;
+
+      draw();
+
+      /* El bucle se apaga cuando el puntero y el brillo ya han llegado. */
+      if (
+        Math.abs(dx) > 0.0004 ||
+        Math.abs(dy) > 0.0004 ||
+        Math.abs(dp) > 0.004
+      ) {
+        raf = requestAnimationFrame(loop);
+      } else {
+        pointer.x = pointer.tx;
+        pointer.y = pointer.ty;
+        pointer.presence = pointer.targetPresence;
+        draw();
+        running = false;
+      }
+    }
+
+    function requestFrame() {
+      if (reduce || !onScreen || document.hidden || running) return;
+      running = true;
+      raf = requestAnimationFrame(loop);
+    }
+
+    function stop() {
+      running = false;
+      cancelAnimationFrame(raf);
     }
 
     function resize() {
@@ -121,49 +151,28 @@ export function FlowField() {
       canvas.width = Math.max(1, Math.round(width * dpr));
       canvas.height = Math.max(1, Math.round(height * dpr));
       ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
-      if (reduce) draw(0);
-    }
-
-    function loop(time: number) {
-      pointer.x += (pointer.tx - pointer.x) * 0.075;
-      pointer.y += (pointer.ty - pointer.y) * 0.075;
-      pointer.presence +=
-        (pointer.targetPresence - pointer.presence) * 0.06;
-      pointer.energy *= 0.94;
-      draw(time);
-      raf = requestAnimationFrame(loop);
-    }
-
-    function start() {
-      if (running || reduce || !onScreen || document.hidden) return;
-      running = true;
-      raf = requestAnimationFrame(loop);
-    }
-
-    function stop() {
-      running = false;
-      cancelAnimationFrame(raf);
+      draw();
     }
 
     function onPointerMove(event: PointerEvent) {
-      const nx = event.clientX / window.innerWidth;
-      const ny = event.clientY / window.innerHeight;
-      const travel = Math.hypot(nx - pointer.tx, ny - pointer.ty);
-      pointer.energy = Math.min(1, pointer.energy + travel * 5);
-      pointer.tx = nx;
-      pointer.ty = ny;
+      pointer.tx = event.clientX / window.innerWidth;
+      pointer.ty = event.clientY / window.innerHeight;
       pointer.targetPresence = 1;
+      requestFrame();
     }
 
     function onVisibility() {
-      if (document.hidden) stop();
-      else start();
+      if (document.hidden) {
+        stop();
+      } else {
+        requestFrame();
+      }
     }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         onScreen = entry.isIntersecting;
-        if (onScreen) start();
+        if (onScreen) requestFrame();
         else stop();
       },
       { threshold: 0 },
@@ -176,9 +185,6 @@ export function FlowField() {
     resize();
     window.addEventListener("pointermove", onPointerMove, { passive: true });
     document.addEventListener("visibilitychange", onVisibility);
-
-    if (reduce) draw(0);
-    else start();
 
     return () => {
       stop();
