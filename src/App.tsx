@@ -7,6 +7,7 @@ import { useReveal } from "./hooks/useReveal";
 import { useSectionSnap } from "./hooks/useSectionSnap";
 import { Preloader } from "./components/Preloader";
 import { CustomCursor } from "./components/CustomCursor";
+import { SiteBackdrop } from "./components/SiteBackdrop";
 import { Header } from "./components/Header";
 import { Hero } from "./components/Hero";
 import { Work } from "./components/Work";
@@ -64,6 +65,7 @@ function Site() {
         onDone={() => setReady(true)}
       />
       {!editing && <CustomCursor />}
+      <SiteBackdrop />
       <div className="grain" aria-hidden="true" />
       <div className="scanlines" aria-hidden="true" />
 

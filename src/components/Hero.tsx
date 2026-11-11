@@ -12,7 +12,6 @@ import { useSite } from "../lib/site";
 import { scrollToBlock } from "../lib/scroll";
 import { useEditor } from "../edit/EditorContext";
 import { EditBar, EditButton } from "../edit/controls";
-import { FlowField } from "./FlowField";
 import { Marquee } from "./Marquee";
 import { PixelStar } from "./Decor";
 
@@ -80,12 +79,6 @@ export function Hero({ ready }: { ready: boolean }) {
       ref={root}
       aria-labelledby="hero-title"
     >
-      <div className="hero__field" aria-hidden="true">
-        <FlowField />
-      </div>
-      <div className="hero__glow" aria-hidden="true" />
-      <div className="hero__grid" aria-hidden="true" />
-
       <div className="hero__object" aria-hidden="true">
         <Suspense fallback={null}>
           <HeroObject />
