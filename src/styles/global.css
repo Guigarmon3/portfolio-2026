@@ -136,6 +136,7 @@ ol {
   --fs-micro: 0.75rem;
 
   --gutter: clamp(1.25rem, 4vw, 4.5rem);
+  --rail: 0px;
   --max: 1560px;
   --header-h: 4.5rem;
 
@@ -177,7 +178,7 @@ ol {
    -------------------------------------------------------------------------- */
 
 .shell {
-  width: min(100% - (var(--gutter) * 2), var(--max));
+  width: min(100% - (var(--gutter) * 2) - var(--rail, 0px), var(--max));
   margin-inline: auto;
 }
 
@@ -618,7 +619,10 @@ ol {
 
 .section-nav {
   position: fixed;
-  right: clamp(0.7rem, 1.6vw, 1.6rem);
+  right: max(
+    clamp(0.7rem, 1.6vw, 1rem),
+    calc((100vw - var(--max)) / 2 - 10rem)
+  );
   top: 50%;
   transform: translateY(-50%);
   z-index: 60;
@@ -650,24 +654,15 @@ ol {
 }
 
 .section-nav__label {
-  position: absolute;
-  right: calc(100% + 0.45rem);
-  top: 50%;
-  padding: 0.2rem 0.45rem;
-  border: 1px solid var(--line-soft);
-  border-radius: 0.3rem;
-  background: rgba(12, 11, 16, 0.92);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  padding: 0;
   font-family: var(--font-mono);
   font-size: 0.72rem;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   white-space: nowrap;
-  opacity: 0;
-  transform: translateY(-50%) translateX(6px);
-  pointer-events: none;
-  transition: opacity 0.2s var(--ease-out), transform 0.2s var(--ease-out), color 0.25s;
+  opacity: 1;
+  transform: none;
+  transition: color 0.25s;
 }
 
 .section-nav__dot {
@@ -681,12 +676,6 @@ ol {
 .section-nav__item:hover,
 .section-nav__item.is-active {
   color: var(--accent);
-}
-
-.section-nav__item:hover .section-nav__label,
-.section-nav__item:focus-visible .section-nav__label {
-  opacity: 1;
-  transform: translateY(-50%) translateX(0);
 }
 
 .section-nav__item.is-active .section-nav__dot {
@@ -1074,9 +1063,10 @@ ol {
 .hero__object {
   position: absolute;
   z-index: 1;
-  right: 8vw;
+  /* Deja libre la columna del índice lateral y no pisa el titular. */
+  right: clamp(11rem, 14vw, 15rem);
   top: 45%;
-  width: clamp(15rem, 25vw, 28rem);
+  width: clamp(12rem, 20vw, 26rem);
   aspect-ratio: 1;
   transform: translateY(-50%);
   pointer-events: none;
@@ -2597,6 +2587,17 @@ html.has-custom-cursor * {
 /* --------------------------------------------------------------------------
    Responsive
    -------------------------------------------------------------------------- */
+
+@media (min-width: 1024px) and (max-width: 1919px) {
+  :root {
+    --rail: 6rem;
+  }
+
+  .shell {
+    margin-left: var(--gutter);
+    margin-right: auto;
+  }
+}
 
 @media (max-width: 1400px) {
   .header__side .status {
