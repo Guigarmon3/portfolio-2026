@@ -18,6 +18,10 @@ server/data/credentials.json
 # Imágenes subidas desde el editor
 server/uploads/
 
+# Cloudflare / Wrangler
+.wrangler/
+.dev.vars
+
 # Temporales
 cookies.txt
 *.log

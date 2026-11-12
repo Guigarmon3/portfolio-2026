@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://guigarmon3.online/sitemap.xml

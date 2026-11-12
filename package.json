@@ -13,6 +13,9 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "start": "node server/index.mjs",
+    "db:migrate": "wrangler d1 execute portfolio-2026-db --remote --file=worker/schema.sql",
+    "deploy": "npm run build && wrangler deploy",
+    "deploy:www": "wrangler deploy --config wrangler.www.jsonc",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

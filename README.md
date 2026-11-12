@@ -33,6 +33,23 @@ El frontend es una aplicación React organizada por secciones y por capas: compo
 
 La edición vive dentro de la propia web. Los cambios se preparan en un borrador y solo se publican al guardar. La API se encarga de persistir el contenido, gestionar las imágenes y proteger el acceso mediante una sesión privada con verificación en dos pasos.
 
+## Despliegue
+
+La versión pública se sirve en [guigarmon3.online](https://guigarmon3.online) desde Cloudflare Workers. El frontend se publica como assets estáticos y la API vive en el mismo Worker.
+
+- **Contenido:** D1 (`portfolio-2026-db`). `server/data/content.json` actúa como semilla la primera vez que la base está vacía; después manda lo guardado desde el editor.
+- **Imágenes:** KV (`portfolio-2026-uploads`).
+- **Secretos del Worker:** `ADMIN_PASSWORD` (hash scrypt), `NTFY_TOPIC` y `SESSION_SECRET`.
+
+```bash
+npm run build       # genera dist/
+npm run db:migrate  # aplica worker/schema.sql en D1 (primera vez o cambios de tabla)
+npm run deploy      # compila y publica el Worker y sus assets
+npm run deploy:www  # Worker aparte que redirige www al dominio principal
+```
+
+La API local de Express (`npm run dev:full`) sigue disponible para desarrollar sin Cloudflare.
+
 ## Accesibilidad y detalle
 
 - Contraste medido, foco visible y navegación con teclado.

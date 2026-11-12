@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "portfolio-2026-www",
+  "main": "worker/www.mjs",
+  "compatibility_date": "2026-11-12",
+  "workers_dev": false,
+  "routes": [
+    {
+      "pattern": "www.guigarmon3.online/*",
+      "zone_name": "guigarmon3.online"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}
