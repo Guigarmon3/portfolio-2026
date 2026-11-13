@@ -16,7 +16,8 @@
     "db:migrate": "wrangler d1 execute portfolio-2026-db --remote --file=worker/schema.sql",
     "deploy": "npm run build && wrangler deploy",
     "deploy:www": "wrangler deploy --config wrangler.www.jsonc",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:worker": "node --test worker/*.test.mjs"
   },
   "dependencies": {
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",

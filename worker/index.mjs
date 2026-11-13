@@ -8,6 +8,7 @@ import {
 } from "node:crypto";
 import { promisify } from "node:util";
 import seed from "../server/data/content.json";
+import { parseMeridianChart } from "./meridiano-quotes.mjs";
 
 const scrypt = promisify(scryptCallback);
 
@@ -599,33 +600,10 @@ async function handleApi(request, env, url) {
 const MERIDIAN_UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
   "(KHTML, like Gecko) Chrome/126.0 Safari/537.36";
-const MERIDIAN_BONDS = new Set([
-  "US10Y", "US2Y", "US30Y", "DE10Y", "ES10Y", "TBILL3M",
-]);
-const MERIDIAN_CRYPTO = new Set(["BTC", "ETH", "SOL", "XRP", "ADA"]);
 const MERIDIAN_QUOTE_TTL_MS = 8000;
 const MERIDIAN_MANIFEST_TTL_MS = 5 * 60 * 1000;
 const meridianQuoteCache = new Map();
 let meridianManifest = { at: 0, symbols: null };
-
-function meridianPositive(value) {
-  const number = Number(value);
-  return Number.isFinite(number) && number > 0 ? number : null;
-}
-
-function meridianMarketState(meta, ticker) {
-  if (MERIDIAN_CRYPTO.has(ticker)) return "open";
-  const period = meta?.currentTradingPeriod?.regular || {};
-  const start = Number(period.start);
-  const end = Number(period.end);
-  const now = Date.now() / 1000;
-  if (Number.isFinite(start) && Number.isFinite(end) && end > start) {
-    if (now < start) return "pre";
-    if (now <= end) return "open";
-    return "closed";
-  }
-  return "unknown";
-}
 
 async function meridianSymbols(env, url) {
   if (
@@ -666,63 +644,7 @@ async function meridianYahooQuote(ticker, symbol) {
   if (!response.ok) throw new Error(`Yahoo ${response.status}`);
 
   const payload = await response.json();
-  const result = payload?.chart?.result?.[0];
-  if (!result) {
-    throw new Error(
-      payload?.chart?.error?.description || "Yahoo no devolvió datos",
-    );
-  }
-
-  const meta = result.meta || {};
-  const closes = result.indicators?.quote?.[0]?.close || [];
-  let price = meridianPositive(meta.regularMarketPrice);
-  if (price === null) {
-    for (let index = closes.length - 1; index >= 0; index -= 1) {
-      price = meridianPositive(closes[index]);
-      if (price !== null) break;
-    }
-  }
-  if (price === null) throw new Error("Sin precio válido");
-
-  let previous = meridianPositive(meta.chartPreviousClose);
-  if (previous !== null && !(previous / price >= 0.1 && previous / price <= 10)) {
-    previous = null;
-  }
-  if (previous === null) {
-    const candidate = meridianPositive(meta.previousClose);
-    if (candidate !== null && candidate / price >= 0.1 && candidate / price <= 10) {
-      previous = candidate;
-    }
-  }
-  if (previous === null) previous = price;
-
-  const change = price - previous;
-  const quoteTime = Number(meta.regularMarketTime);
-  const quote = {
-    ticker,
-    symbol: meta.symbol || symbol,
-    price,
-    change,
-    changePct: previous ? change / previous : 0,
-    changePp: change,
-    previousClose: previous,
-    open: meridianPositive(meta.regularMarketOpen),
-    dayHigh: meridianPositive(meta.regularMarketDayHigh),
-    dayLow: meridianPositive(meta.regularMarketDayLow),
-    volume: Number.isFinite(Number(meta.regularMarketVolume))
-      ? Number(meta.regularMarketVolume)
-      : null,
-    currency: meta.currency || "USD",
-    exchange: meta.fullExchangeName || meta.exchangeName || "",
-    asOf: Number.isFinite(quoteTime)
-      ? new Date(quoteTime * 1000).toISOString()
-      : new Date().toISOString(),
-    marketState: meridianMarketState(meta, ticker),
-    isYield: MERIDIAN_BONDS.has(ticker),
-    source: "Yahoo Finance",
-    delay: "Cotización con retraso (habitualmente 15-20 minutos).",
-    dataMode: "live",
-  };
+  const quote = parseMeridianChart(payload, ticker, symbol);
 
   meridianQuoteCache.set(ticker, { at: Date.now(), quote });
   return quote;
