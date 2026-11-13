@@ -2,10 +2,13 @@
    Vive fuera de index.mjs para poder probarlo sin red ni Workers. */
 
 export const MERIDIAN_BONDS = new Set([
-  "US10Y", "US2Y", "US30Y", "DE10Y", "ES10Y", "TBILL3M",
+  "US10Y", "US2Y", "US30Y", "US5Y", "DE10Y", "ES10Y", "IT10Y", "FR10Y",
+  "TBILL3M",
 ]);
 
-export const MERIDIAN_CRYPTO = new Set(["BTC", "ETH", "SOL", "XRP", "ADA"]);
+export const MERIDIAN_CRYPTO = new Set([
+  "BTC", "ETH", "SOL", "XRP", "ADA", "DOGE", "AVAX", "LINK",
+]);
 
 export function meridianPositive(value) {
   const number = Number(value);

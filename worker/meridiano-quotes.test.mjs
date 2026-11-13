@@ -98,12 +98,18 @@ test("si todos los cierres anteriores son inválidos, la variación es cero", ()
 
 test("marca los bonos como rendimiento", () => {
   assert.equal(MERIDIAN_BONDS.has("US10Y"), true);
+  assert.equal(MERIDIAN_BONDS.has("US5Y"), true);
+  assert.equal(MERIDIAN_BONDS.has("IT10Y"), true);
+  assert.equal(MERIDIAN_BONDS.has("FR10Y"), true);
   const quote = parseMeridianChart(chart(), "US10Y", "^TNX", NOW);
   assert.equal(quote.isYield, true);
 });
 
 test("la cripto siempre se considera mercado abierto", () => {
   assert.equal(MERIDIAN_CRYPTO.has("BTC"), true);
+  assert.equal(MERIDIAN_CRYPTO.has("DOGE"), true);
+  assert.equal(MERIDIAN_CRYPTO.has("AVAX"), true);
+  assert.equal(MERIDIAN_CRYPTO.has("LINK"), true);
   const quote = parseMeridianChart(
     chart({ currentTradingPeriod: {} }),
     "BTC",
