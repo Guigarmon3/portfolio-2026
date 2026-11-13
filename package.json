@@ -10,7 +10,7 @@
     "auth:setup": "node scripts/setup-credentials.mjs",
     "ntfy:info": "node scripts/ntfy-info.mjs",
     "ntfy:test": "node scripts/ntfy-test.mjs",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && node scripts/sync-meridiano.mjs",
     "preview": "vite preview",
     "start": "node server/index.mjs",
     "db:migrate": "wrangler d1 execute portfolio-2026-db --remote --file=worker/schema.sql",

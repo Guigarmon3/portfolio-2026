@@ -588,6 +588,221 @@ async function handleApi(request, env, url) {
   return fail(404, "Ruta no encontrada");
 }
 
+/* --------------------------------------------------------------------------
+   Meridiano · cotizaciones ligeras para /investing
+   --------------------------------------------------------------------------
+   El snapshot de Meridiano trae fichas, fundamentales y gráficos. Este
+   endpoint añade solo la cotización del día para que la interfaz pueda
+   refrescar precios sin depender de FastAPI. Yahoo Finance sigue siendo una
+   fuente gratuita y no oficial: no se promete tiempo real consolidado. */
+
+const MERIDIAN_UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+  "(KHTML, like Gecko) Chrome/126.0 Safari/537.36";
+const MERIDIAN_BONDS = new Set([
+  "US10Y", "US2Y", "US30Y", "DE10Y", "ES10Y", "TBILL3M",
+]);
+const MERIDIAN_CRYPTO = new Set(["BTC", "ETH", "SOL", "XRP", "ADA"]);
+const MERIDIAN_QUOTE_TTL_MS = 8000;
+const MERIDIAN_MANIFEST_TTL_MS = 5 * 60 * 1000;
+const meridianQuoteCache = new Map();
+let meridianManifest = { at: 0, symbols: null };
+
+function meridianPositive(value) {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? number : null;
+}
+
+function meridianMarketState(meta, ticker) {
+  if (MERIDIAN_CRYPTO.has(ticker)) return "open";
+  const period = meta?.currentTradingPeriod?.regular || {};
+  const start = Number(period.start);
+  const end = Number(period.end);
+  const now = Date.now() / 1000;
+  if (Number.isFinite(start) && Number.isFinite(end) && end > start) {
+    if (now < start) return "pre";
+    if (now <= end) return "open";
+    return "closed";
+  }
+  return "unknown";
+}
+
+async function meridianSymbols(env, url) {
+  if (
+    meridianManifest.symbols &&
+    Date.now() - meridianManifest.at < MERIDIAN_MANIFEST_TTL_MS
+  ) {
+    return meridianManifest.symbols;
+  }
+  const assetUrl = new URL("/investing/data/live/manifest.json", url);
+  const response = await env.ASSETS.fetch(
+    new Request(assetUrl.toString(), {
+      headers: { Accept: "application/json" },
+    }),
+  );
+  if (!response.ok) throw new Error(`Manifiesto ${response.status}`);
+  const manifest = await response.json();
+  meridianManifest = {
+    at: Date.now(),
+    symbols: manifest.symbols || {},
+  };
+  return meridianManifest.symbols;
+}
+
+async function meridianYahooQuote(ticker, symbol) {
+  const cached = meridianQuoteCache.get(ticker);
+  if (cached && Date.now() - cached.at < MERIDIAN_QUOTE_TTL_MS) {
+    return cached.quote;
+  }
+
+  const endpoint =
+    "https://query1.finance.yahoo.com/v8/finance/chart/" +
+    `${encodeURIComponent(symbol)}?interval=1d&range=1d&includePrePost=false`;
+  const response = await fetch(endpoint, {
+    headers: { "User-Agent": MERIDIAN_UA, Accept: "application/json" },
+    cf: { cacheTtl: 8, cacheEverything: true },
+    signal: AbortSignal.timeout(7000),
+  });
+  if (!response.ok) throw new Error(`Yahoo ${response.status}`);
+
+  const payload = await response.json();
+  const result = payload?.chart?.result?.[0];
+  if (!result) {
+    throw new Error(
+      payload?.chart?.error?.description || "Yahoo no devolvió datos",
+    );
+  }
+
+  const meta = result.meta || {};
+  const closes = result.indicators?.quote?.[0]?.close || [];
+  let price = meridianPositive(meta.regularMarketPrice);
+  if (price === null) {
+    for (let index = closes.length - 1; index >= 0; index -= 1) {
+      price = meridianPositive(closes[index]);
+      if (price !== null) break;
+    }
+  }
+  if (price === null) throw new Error("Sin precio válido");
+
+  let previous = meridianPositive(meta.chartPreviousClose);
+  if (previous !== null && !(previous / price >= 0.1 && previous / price <= 10)) {
+    previous = null;
+  }
+  if (previous === null) {
+    const candidate = meridianPositive(meta.previousClose);
+    if (candidate !== null && candidate / price >= 0.1 && candidate / price <= 10) {
+      previous = candidate;
+    }
+  }
+  if (previous === null) previous = price;
+
+  const change = price - previous;
+  const quoteTime = Number(meta.regularMarketTime);
+  const quote = {
+    ticker,
+    symbol: meta.symbol || symbol,
+    price,
+    change,
+    changePct: previous ? change / previous : 0,
+    changePp: change,
+    previousClose: previous,
+    open: meridianPositive(meta.regularMarketOpen),
+    dayHigh: meridianPositive(meta.regularMarketDayHigh),
+    dayLow: meridianPositive(meta.regularMarketDayLow),
+    volume: Number.isFinite(Number(meta.regularMarketVolume))
+      ? Number(meta.regularMarketVolume)
+      : null,
+    currency: meta.currency || "USD",
+    exchange: meta.fullExchangeName || meta.exchangeName || "",
+    asOf: Number.isFinite(quoteTime)
+      ? new Date(quoteTime * 1000).toISOString()
+      : new Date().toISOString(),
+    marketState: meridianMarketState(meta, ticker),
+    isYield: MERIDIAN_BONDS.has(ticker),
+    source: "Yahoo Finance",
+    delay: "Cotización con retraso (habitualmente 15-20 minutos).",
+    dataMode: "live",
+  };
+
+  meridianQuoteCache.set(ticker, { at: Date.now(), quote });
+  return quote;
+}
+
+async function meridianMapLimit(items, limit, task) {
+  const results = new Array(items.length);
+  let cursor = 0;
+  const workers = Array.from(
+    { length: Math.min(limit, items.length) },
+    async () => {
+      while (cursor < items.length) {
+        const index = cursor;
+        cursor += 1;
+        results[index] = await task(items[index], index);
+      }
+    },
+  );
+  await Promise.all(workers);
+  return results;
+}
+
+async function handleMeridianoQuotes(request, env, url) {
+  if (request.method !== "GET") return fail(405, "Método no permitido");
+
+  const tickers = [
+    ...new Set(
+      (url.searchParams.get("tickers") || "")
+        .split(",")
+        .map((ticker) => ticker.trim().toUpperCase())
+        .filter(Boolean),
+    ),
+  ].slice(0, 30);
+
+  if (!tickers.length) {
+    return json({
+      fetchedAt: new Date().toISOString(),
+      quotes: {},
+      errors: {},
+      requested: 0,
+      count: 0,
+    });
+  }
+
+  let symbols;
+  try {
+    symbols = await meridianSymbols(env, url);
+  } catch (error) {
+    console.error("[meridiano] No se pudo leer el manifiesto:", error);
+    return fail(503, "Meridiano no tiene el manifiesto de símbolos disponible.");
+  }
+
+  const quotes = {};
+  const errors = {};
+  await meridianMapLimit(tickers, 6, async (ticker) => {
+    const symbol = symbols[ticker];
+    if (!symbol) {
+      errors[ticker] = "Ticker desconocido";
+      return;
+    }
+    try {
+      quotes[ticker] = await meridianYahooQuote(ticker, symbol);
+    } catch (error) {
+      errors[ticker] = error?.message || "Sin datos";
+    }
+  });
+
+  return json({
+    fetchedAt: new Date().toISOString(),
+    quotes,
+    errors,
+    requested: tickers.length,
+    count: Object.keys(quotes).length,
+    source: "Yahoo Finance",
+    delay:
+      "Cotizaciones con retraso (habitualmente 15-20 minutos; " +
+      "Yahoo Finance no garantiza tiempo real).",
+  });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -598,6 +813,17 @@ export default {
       }
       if (url.pathname.startsWith("/uploads/")) {
         return await serveUpload(url, env, request);
+      }
+      if (url.pathname === "/investing/api/health") {
+        return json({
+          status: "ok",
+          service: "meridiano-quotes",
+          mode: "hybrid",
+          time: new Date().toISOString(),
+        });
+      }
+      if (url.pathname === "/investing/api/quotes") {
+        return await handleMeridianoQuotes(request, env, url);
       }
       return env.ASSETS.fetch(request);
     } catch (error) {
