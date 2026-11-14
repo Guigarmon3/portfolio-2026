@@ -491,10 +491,10 @@
           ]
         },
         "note": {
-          "es": "Código disponible bajo petición.",
-          "en": "Code available on request."
+          "es": "Código público en GitHub.",
+          "en": "Public source code on GitHub."
         },
-        "githubUrl": "",
+        "githubUrl": "https://github.com/Guigarmon3/garage-cloud",
         "externalUrl": "https://guigarmon3.online/coches/",
         "linkMode": "external",
         "featured": true,
@@ -662,5 +662,5 @@
       "energy": "extra"
     }
   },
-  "updatedAt": "2026-11-14T14:24:38.692Z"
+  "updatedAt": "2026-11-14T14:40:56.130Z"
 }
