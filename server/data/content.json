@@ -449,6 +449,59 @@
     ],
     "projects": [
       {
+        "id": "garage-cloud",
+        "title": "Garage Cloud",
+        "year": "2026",
+        "category": {
+          "es": "Producto personal",
+          "en": "Personal product"
+        },
+        "role": {
+          "es": "Diseño, front-end y back-end",
+          "en": "Design, front-end and back-end"
+        },
+        "stack": [
+          "React 19",
+          "TypeScript",
+          "Vite",
+          "Cloudflare Workers",
+          "D1",
+          "KV",
+          "Cheerio"
+        ],
+        "accent": "#82C7FF",
+        "subtitle": {
+          "es": "Garaje de coches en Cloudflare",
+          "en": "A car garage on Cloudflare"
+        },
+        "summary": {
+          "es": "Una aplicación para guardar anuncios de coches de Wallapop, coches.net, Milanuncios y AutoScout24. Pegas un enlace y la ficha queda archivada con su historial de precio y todas las fotos, aunque el anuncio original desaparezca.",
+          "en": "An app to save car listings from Wallapop, coches.net, Milanuncios and AutoScout24. Paste a link and the listing is archived with its price history and every photo, even if the original ad disappears."
+        },
+        "bullets": {
+          "es": [
+            "Cuatro parsers propios (JSON-LD y __NEXT_DATA__) que extraen ficha, precio y galería desde el HTML público.",
+            "Worker con API REST, autenticación PBKDF2, sesiones httpOnly y límite de intentos; D1 para datos y KV para las fotos archivadas.",
+            "Cron diario que revisa precio y disponibilidad, más exportación completa del garaje en JSON."
+          ],
+          "en": [
+            "Four in-house parsers (JSON-LD and __NEXT_DATA__) that extract listing, price and gallery from public HTML.",
+            "A Worker with a REST API, PBKDF2 auth, httpOnly sessions and rate limiting; D1 for data and KV for archived photos.",
+            "A daily cron that checks price and availability, plus a full garage export as JSON."
+          ]
+        },
+        "note": {
+          "es": "Código disponible bajo petición.",
+          "en": "Code available on request."
+        },
+        "githubUrl": "",
+        "externalUrl": "https://guigarmon3.online/coches/",
+        "linkMode": "external",
+        "featured": true,
+        "visible": true,
+        "image": "/work/garage-cloud.jpg"
+      },
+      {
         "id": "stashly",
         "title": "Stashly",
         "year": "2026",
@@ -609,5 +662,5 @@
       "energy": "extra"
     }
   },
-  "updatedAt": "2026-11-11T02:31:17.754Z"
+  "updatedAt": "2026-11-14T14:24:38.692Z"
 }
