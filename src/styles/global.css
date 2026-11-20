@@ -234,7 +234,6 @@ ol {
 .status,
 .lang,
 .btn,
-.work__live,
 .work__more-name,
 .modal__close,
 .modal__link,
@@ -1993,32 +1992,6 @@ ol {
   text-align: right;
   max-width: 15ch;
   line-height: 1.5;
-}
-
-.work__live {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-family: var(--font-micro);
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  color: var(--coral);
-  border: 1px solid var(--coral-soft);
-  border-radius: 999px;
-  padding: 0.28rem 0.42rem;
-}
-
-.work__live-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--coral);
-  animation: pulse-coral 1.8s infinite;
-}
-
-@keyframes pulse-coral {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.35; }
 }
 
 .work__arrow {
@@ -4395,10 +4368,6 @@ html.has-custom-cursor * {
 
   .work__meta,
   .work__stack,
-  .work__live {
-    display: none;
-  }
-
   .work__sub {
     white-space: normal;
     font-size: 0.86rem;

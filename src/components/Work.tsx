@@ -138,16 +138,9 @@ export function Work() {
                     <b>{project.category[lang]}</b>
                     <span className="work__year">{project.year}</span>
                   </span>
-                  {project.linkMode === "external" && project.externalUrl ? (
-                    <span className="work__live">
-                      <span className="work__live-dot" aria-hidden="true" />
-                      {t.work.live}
-                    </span>
-                  ) : (
-                    <span className="work__stack">
-                      {project.stack.slice(0, 3).join(" · ")}
-                    </span>
-                  )}
+                  <span className="work__stack">
+                    {project.stack.slice(0, 3).join(" · ")}
+                  </span>
                   <span className="work__arrow" aria-hidden="true">
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                       <path
