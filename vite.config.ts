@@ -16,5 +16,13 @@ export default defineConfig({
       },
     },
   },
-  build: { target: "es2022" },
+  build: {
+    /*
+     * Navegadores objetivo: Chrome/Edge 84, Firefox 78 ESR y Safari 13.1.
+     * Es el suelo razonable para un Linux Mint antiguo con navegador
+     * actualizado, sin renunciar a módulos nativos ni a ResizeObserver.
+     */
+    target: ["chrome84", "firefox78", "safari13.1", "edge84"],
+    cssTarget: ["chrome84", "firefox78", "safari13.1", "edge84"],
+  },
 });

@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLang } from "../lib/lang";
 import { scrollToBlock } from "../lib/scroll";
+import { useDialog } from "../hooks/useDialog";
 import type { Lang } from "../data/content";
 
 const LANGS: Lang[] = ["es", "en"];
@@ -17,21 +18,20 @@ export function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => {
-    document.documentElement.classList.toggle("is-locked", menuOpen);
-    return () => document.documentElement.classList.remove("is-locked");
-  }, [menuOpen]);
-
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMenuOpen(false);
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+  const burgerRef = useRef<HTMLButtonElement>(null);
+  const closeMenu = useCallback(() => {
+    /* Devolvemos el foco antes de ocultar el menú: Chrome ignora
+       aria-hidden si el elemento enfocado sigue dentro. */
+    burgerRef.current?.focus();
+    setMenuOpen(false);
   }, []);
+  const menuRef = useDialog<HTMLDivElement>(closeMenu, {
+    enabled: menuOpen,
+    hideRoot: false,
+  });
 
   const go = (id: string) => {
-    setMenuOpen(false);
+    if (menuOpen) closeMenu();
     window.setTimeout(() => scrollToBlock(id), 10);
   };
 
@@ -113,6 +113,7 @@ export function Header() {
             </div>
 
             <button
+              ref={burgerRef}
               type="button"
               className="burger"
               aria-expanded={menuOpen}
@@ -131,6 +132,8 @@ export function Header() {
         id="mobile-menu"
         className={`menu${menuOpen ? " is-open" : ""}`}
         aria-hidden={!menuOpen}
+        tabIndex={-1}
+        ref={menuRef}
       >
         <div className="menu__top">
           <span className="pixel-label">MENU / 2026</span>

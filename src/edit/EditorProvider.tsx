@@ -1,4 +1,6 @@
 import {
+  lazy,
+  Suspense,
   useCallback,
   useEffect,
   useMemo,
@@ -12,8 +14,16 @@ import {
   type AuthState,
   type EditorContextValue,
 } from "./EditorContext";
-import { EditorUI } from "./EditorUI";
 import type { EditorTarget, ImageRequest } from "./types";
+
+/*
+ * El editor (formularios + CSS del panel) no forma parte de la visita normal.
+ * Se descarga solo al abrir el acceso o al entrar en modo edición, y así el
+ * bundle inicial no carga ~60 kB de código que casi nadie usa.
+ */
+const EditorUI = lazy(() =>
+  import("./EditorUI").then((module) => ({ default: module.EditorUI })),
+);
 
 function removeEditQuery() {
   const url = new URL(window.location.href);
@@ -30,6 +40,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     startEditing,
     stopEditing,
     notify,
+    toast,
   } = useSite();
   const [auth, setAuth] = useState<AuthState>("checking");
   const [gateOpen, setGateOpen] = useState(false);
@@ -37,18 +48,28 @@ export function EditorProvider({ children }: { children: ReactNode }) {
   const [imageRequest, setImageRequest] = useState<ImageRequest | null>(null);
   const autoOpened = useRef(false);
 
+  /*
+   * La comprobación de sesión no es necesaria para pintar la web: se retrasa
+   * para no competir con la carga inicial. Si la URL pide editar, va directa.
+   */
   useEffect(() => {
     let alive = true;
-    fetch("/api/auth/me", { headers: { Accept: "application/json" } })
-      .then((response) => response.json())
-      .then((payload) => {
-        if (alive) setAuth(payload?.authenticated ? "in" : "out");
-      })
-      .catch(() => {
-        if (alive) setAuth("out");
-      });
+    const check = () => {
+      fetch("/api/auth/me", { headers: { Accept: "application/json" } })
+        .then((response) => response.json())
+        .then((payload) => {
+          if (alive) setAuth(payload?.authenticated ? "in" : "out");
+        })
+        .catch(() => {
+          if (alive) setAuth("out");
+        });
+    };
+    const wantsEdit =
+      new URLSearchParams(window.location.search).get("edit") === "1";
+    const timer = window.setTimeout(check, wantsEdit ? 0 : 1500);
     return () => {
       alive = false;
+      window.clearTimeout(timer);
     };
   }, []);
 
@@ -190,10 +211,21 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     ],
   );
 
+  /*
+   * Se mantiene montado mientras hay cualquier interfaz visible (incluido el
+   * toast, que debe seguir viéndose justo después de salir del editor).
+   */
+  const showUI =
+    editing || gateOpen || imageRequest !== null || toast !== null;
+
   return (
     <EditorContext.Provider value={value}>
       {children}
-      <EditorUI />
+      {showUI ? (
+        <Suspense fallback={null}>
+          <EditorUI />
+        </Suspense>
+      ) : null}
     </EditorContext.Provider>
   );
 }

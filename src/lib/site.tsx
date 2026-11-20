@@ -79,8 +79,20 @@ export function normalizeContent(content: SiteContent): SiteContent {
   };
 }
 
-function cloneContent(content: SiteContent): SiteContent {
-  return structuredClone(content);
+/**
+ * Clon profundo compatible con navegadores antiguos. `structuredClone` no
+ * existe en Firefox < 94 ni en Chrome < 98; como el contenido es JSON puro,
+ * el round-trip por JSON es suficiente y conserva el mismo resultado.
+ */
+export function cloneContent(content: SiteContent): SiteContent {
+  if (typeof structuredClone === "function") {
+    try {
+      return structuredClone(content);
+    } catch {
+      /* Si algo no es clonable, seguimos con el fallback JSON. */
+    }
+  }
+  return JSON.parse(JSON.stringify(content)) as SiteContent;
 }
 
 export function SiteProvider({ children }: { children: ReactNode }) {

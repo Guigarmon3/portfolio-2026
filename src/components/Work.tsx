@@ -1,17 +1,39 @@
-import { useState, type CSSProperties } from "react";
+import { lazy, Suspense, useEffect, useState, type CSSProperties } from "react";
 import { useLang } from "../lib/lang";
 import { safeImageUrl, safeUrl, useSite } from "../lib/site";
+import { hexToRgbChannels } from "../lib/color";
 import { useEditor } from "../edit/EditorContext";
 import { AddButton, EditBar, EditButton } from "../edit/controls";
 import { blankProject } from "../edit/factories";
-import { ProjectModal } from "./ProjectModal";
 import { PixelStar } from "./Decor";
+
+/* El detalle del proyecto solo se descarga cuando se va a abrir. */
+const loadProjectModal = () => import("./ProjectModal");
+const ProjectModal = lazy(() =>
+  loadProjectModal().then((module) => ({ default: module.ProjectModal })),
+);
 
 export function Work() {
   const { lang, t } = useLang();
   const { data, updateDraft } = useSite();
   const { open } = useEditor();
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  /*
+   * El filmstrip del rail lateral vive fuera de esta sección. En vez de subir
+   * el estado del modal a App, el rail pide abrir un proyecto con un evento.
+   */
+  useEffect(() => {
+    const onOpenProject = (event: Event) => {
+      const id = (event as CustomEvent<string>).detail;
+      if (!id) return;
+      const project = data.projects.find((item) => item.id === id);
+      if (project) setActiveId(project.id);
+    };
+
+    window.addEventListener("gg:open-project", onOpenProject);
+    return () => window.removeEventListener("gg:open-project", onOpenProject);
+  }, [data.projects]);
 
   const featured = data.projects.filter(
     (project) => project.visible && project.featured,
@@ -67,14 +89,23 @@ export function Work() {
           <AddButton label="Añadir proyecto" onClick={addProject} />
         </EditBar>
 
-        <ul className="work__list">
+        <ul
+          className="work__list"
+          onPointerEnter={() => void loadProjectModal()}
+          onFocusCapture={() => void loadProjectModal()}
+        >
           {featured.map((project, index) => {
             const thumb = safeImageUrl(project.image);
             return (
               <li
                 className="work__row"
                 key={project.id}
-                style={{ "--p-accent": project.accent } as CSSProperties}
+                style={
+                  {
+                    "--p-accent": project.accent,
+                    "--p-accent-rgb": hexToRgbChannels(project.accent),
+                  } as CSSProperties
+                }
                 data-reveal
               >
                 <button
@@ -91,7 +122,12 @@ export function Work() {
                   </span>
                   {thumb ? (
                     <span className="work__thumb">
-                      <img src={thumb} alt="" loading="lazy" />
+                      <img
+                        src={thumb}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                      />
                     </span>
                   ) : null}
                   <span className="work__main">
@@ -177,7 +213,9 @@ export function Work() {
       </div>
 
       {active && (
-        <ProjectModal project={active} onClose={() => setActiveId(null)} />
+        <Suspense fallback={null}>
+          <ProjectModal project={active} onClose={() => setActiveId(null)} />
+        </Suspense>
       )}
     </section>
   );

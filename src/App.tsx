@@ -8,6 +8,8 @@ import { useSectionSnap } from "./hooks/useSectionSnap";
 import { Preloader } from "./components/Preloader";
 import { CustomCursor } from "./components/CustomCursor";
 import { SiteBackdrop } from "./components/SiteBackdrop";
+import { PageFrame } from "./components/PageFrame";
+import { SideRail } from "./components/SideRail";
 import { Header } from "./components/Header";
 import { Hero } from "./components/Hero";
 import { Work } from "./components/Work";
@@ -68,6 +70,7 @@ function Site() {
       <SiteBackdrop />
       <div className="grain" aria-hidden="true" />
       <div className="scanlines" aria-hidden="true" />
+      <PageFrame />
 
       <a className="skip" href="#main">
         {t.nav.home === "Inicio" ? "Saltar al contenido" : "Skip to content"}
@@ -75,6 +78,7 @@ function Site() {
 
       <Header />
       <SectionNav items={navItems} active={active} onGo={goTo} />
+      <SideRail items={navItems} active={active} />
 
       <main id="main" tabIndex={-1}>
         <Hero ready={ready} />

@@ -6,6 +6,7 @@ import type {
 } from "../data/content";
 import { defaultContent } from "../data/content";
 import {
+  cloneContent,
   mergeContent,
   normalizeContent,
   safeImageUrl,
@@ -935,7 +936,7 @@ export function SettingsForm() {
     ) {
       return;
     }
-    updateDraft(() => structuredClone(defaultContent));
+    updateDraft(() => cloneContent(defaultContent));
     notify("Contenido original cargado en el editor.");
   };
 

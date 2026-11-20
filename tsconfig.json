@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    /*
+     * El build apunta a Chrome 84 / Firefox 78, así que la librería se
+     * limita a ES2019: TypeScript avisa si se cuela una API más nueva.
+     */
+    "lib": ["ES2019", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",

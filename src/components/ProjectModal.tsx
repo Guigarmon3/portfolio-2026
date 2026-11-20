@@ -1,10 +1,12 @@
-import { useEffect, useRef, type CSSProperties } from "react";
+import type { CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import type { Project } from "../data/content";
 import { useLang } from "../lib/lang";
 import { safeImageUrl, safeUrl, useSite } from "../lib/site";
+import { hexToRgbChannels } from "../lib/color";
 import { useEditor } from "../edit/EditorContext";
 import { EditButton } from "../edit/controls";
+import { useDialog } from "../hooks/useDialog";
 import { PixelStar } from "./Decor";
 
 interface Props {
@@ -12,14 +14,11 @@ interface Props {
   onClose: () => void;
 }
 
-const FOCUSABLE =
-  'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
-
 export function ProjectModal({ project, onClose }: Props) {
   const { lang, t } = useLang();
   const { updateDraft } = useSite();
   const { editing, open, requestImage } = useEditor();
-  const rootRef = useRef<HTMLDivElement>(null);
+  const rootRef = useDialog<HTMLDivElement>(onClose);
   const cover = safeImageUrl(project.image);
 
   const changeCover = () =>
@@ -34,57 +33,6 @@ export function ProjectModal({ project, onClose }: Props) {
           ),
         })),
     });
-
-  useEffect(() => {
-    const node = rootRef.current;
-    if (!node) return;
-
-    const previousFocus = document.activeElement as HTMLElement | null;
-    const previousOverflow = document.body.style.overflow;
-    const root = document.getElementById("root");
-
-    const getFocusable = () =>
-      Array.from(node.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
-        (el) => el.offsetParent !== null,
-      );
-
-    getFocusable()[0]?.focus();
-    document.body.style.overflow = "hidden";
-    document.documentElement.classList.add("is-locked");
-    root?.setAttribute("aria-hidden", "true");
-
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        onClose();
-        return;
-      }
-      if (event.key !== "Tab") return;
-
-      const items = getFocusable();
-      if (items.length === 0) return;
-      const first = items[0];
-      const last = items[items.length - 1];
-
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener("keydown", onKey);
-
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previousOverflow;
-      document.documentElement.classList.remove("is-locked");
-      root?.removeAttribute("aria-hidden");
-      previousFocus?.focus();
-    };
-  }, [onClose]);
 
   const links = [
     project.githubUrl
@@ -108,8 +56,14 @@ export function ProjectModal({ project, onClose }: Props) {
       aria-modal="true"
       aria-labelledby="project-modal-title"
       aria-describedby="project-modal-summary"
+      tabIndex={-1}
       ref={rootRef}
-      style={{ "--p-accent": project.accent } as CSSProperties}
+      style={
+        {
+          "--p-accent": project.accent,
+          "--p-accent-rgb": hexToRgbChannels(project.accent),
+        } as CSSProperties
+      }
     >
       <div className="modal__noise" aria-hidden="true" />
       <div className="modal__inner">
@@ -145,7 +99,11 @@ export function ProjectModal({ project, onClose }: Props) {
         {cover || editing ? (
           <div className={`modal__cover${cover ? "" : " is-empty"}`}>
             {cover ? (
-              <img src={cover} alt={`${project.title} — portada`} />
+              <img
+                src={cover}
+                alt={`${project.title} — portada`}
+                decoding="async"
+              />
             ) : (
               <span className="modal__cover-empty">
                 Este proyecto todavía no tiene portada.

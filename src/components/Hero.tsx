@@ -1,14 +1,7 @@
-import {
-  lazy,
-  Suspense,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
-import gsap from "gsap";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useLang } from "../lib/lang";
 import { useSite } from "../lib/site";
+import { formatMadridTime } from "../lib/time";
 import { scrollToBlock } from "../lib/scroll";
 import { useEditor } from "../edit/EditorContext";
 import { EditBar, EditButton } from "../edit/controls";
@@ -23,13 +16,7 @@ function useLocalTime() {
   const [time, setTime] = useState("");
 
   useEffect(() => {
-    const format = () =>
-      new Intl.DateTimeFormat("es-ES", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-        timeZone: "Europe/Madrid",
-      }).format(new Date());
+    const format = () => formatMadridTime();
 
     setTime(format());
     const id = window.setInterval(() => setTime(format()), 30_000);
@@ -43,29 +30,41 @@ export function Hero({ ready }: { ready: boolean }) {
   const { lang, t } = useLang();
   const { data } = useSite();
   const { open } = useEditor();
-  const root = useRef<HTMLElement>(null);
   const time = useLocalTime();
+  const [showObject, setShowObject] = useState(false);
+  const [onScreen, setOnScreen] = useState(true);
+  const root = useRef<HTMLElement>(null);
 
-  useLayoutEffect(() => {
-    if (!ready) return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const ctx = gsap.context(() => {
-      const words = gsap.utils.toArray<HTMLElement>(".hero__word");
-      if (reduce) {
-        gsap.set(words, { y: 0 });
-        return;
-      }
-      gsap
-        .timeline({ defaults: { ease: "expo.out" } })
-        .to(words, { y: 0, duration: 1.05, stagger: 0.08 })
-        .from(
-          ".hero__kicker, .hero__tagline, .hero__actions, .hero__foot",
-          { y: 18, opacity: 0, duration: 0.8, stagger: 0.06 },
-          0.3,
-        );
-    }, root);
-    return () => ctx.revert();
-  }, [ready]);
+  /*
+   * El degradado del apellido anima background-position (repintado continuo).
+   * Cuando el hero sale de pantalla no hay motivo para mantenerlo activo.
+   */
+  useEffect(() => {
+    const node = root.current;
+    if (!node || !("IntersectionObserver" in window)) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setOnScreen(entry.isIntersecting),
+      { threshold: 0 },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  /*
+   * Por debajo de 1180px el objeto 3D está oculto por CSS. No tiene sentido
+   * descargar Three.js (545 kB) ni crear un contexto WebGL para nada.
+   */
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 1181px)");
+    const sync = () => setShowObject(query.matches);
+    sync();
+    if (typeof query.addEventListener === "function") {
+      query.addEventListener("change", sync);
+      return () => query.removeEventListener("change", sync);
+    }
+    query.addListener(sync);
+    return () => query.removeListener(sync);
+  }, []);
 
   const go = (id: string) => {
     window.setTimeout(() => scrollToBlock(id), 10);
@@ -73,16 +72,20 @@ export function Hero({ ready }: { ready: boolean }) {
 
   return (
     <section
-      className="hero block"
+      className={`hero block${ready ? " is-ready" : ""}${
+        onScreen ? "" : " is-offscreen"
+      }`}
       id="top"
       data-block
       ref={root}
       aria-labelledby="hero-title"
     >
       <div className="hero__object" aria-hidden="true">
-        <Suspense fallback={null}>
-          <HeroObject />
-        </Suspense>
+        {showObject ? (
+          <Suspense fallback={null}>
+            <HeroObject />
+          </Suspense>
+        ) : null}
       </div>
 
       <div className="shell hero__inner">
@@ -110,10 +113,17 @@ export function Hero({ ready }: { ready: boolean }) {
 
           <h1 className="hero__name" id="hero-title">
             <span className="hero__line">
-              <span className="hero__word">{data.profile.firstName}</span>
+              <span className="hero__word" style={{ transitionDelay: "0s" }}>
+                {data.profile.firstName}
+              </span>
             </span>
             <span className="hero__line hero__line--chrome">
-              <span className="hero__word">{data.profile.lastName}</span>
+              <span
+                className="hero__word"
+                style={{ transitionDelay: "0.08s" }}
+              >
+                {data.profile.lastName}
+              </span>
               <PixelStar className="hero__star" />
             </span>
           </h1>

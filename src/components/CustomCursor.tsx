@@ -43,8 +43,8 @@ export function CustomCursor() {
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      applyPosition();
     };
-    resize();
 
     const pointer = { x: width / 2, y: height / 2 };
     const points: TrailPoint[] = [];
@@ -52,9 +52,52 @@ export function CustomCursor() {
     let lastX = pointer.x;
     let lastY = pointer.y;
 
+    /*
+     * El aro va pegado al puntero, sin interpolación. Antes se quedaba
+     * atrás al mover el ratón y se veía lejos al hacer clic.
+     */
+    const applyPosition = () => {
+      const position = `translate3d(${pointer.x}px, ${pointer.y}px, 0) translate(-50%, -50%)`;
+      dot.style.transform = position;
+      ring.style.transform = position;
+    };
+
+    const renderTrail = (now: number) => {
+      ctx.clearRect(0, 0, width, height);
+      while (points.length && now - points[0].born > 280) points.shift();
+
+      for (let i = 0; i < points.length; i += 1) {
+        const point = points[i];
+        const age = (now - point.born) / 280;
+        const alpha = Math.max(0, 1 - age) * 0.5;
+        ctx.beginPath();
+        ctx.fillStyle =
+          i % 5 === 0
+            ? `rgba(255, 122, 102, ${alpha.toFixed(3)})`
+            : `rgba(230, 195, 106, ${alpha.toFixed(3)})`;
+        ctx.arc(point.x, point.y, point.size * (1 - age * 0.6), 0, Math.PI * 2);
+        ctx.fill();
+      }
+    };
+
+    /*
+     * El bucle solo vive mientras quedan puntos de estela. En reposo no se
+     * pide ningún frame ni se repinta el canvas de pantalla completa.
+     */
+    const draw = (now: number) => {
+      raf = 0;
+      renderTrail(now);
+      if (points.length) raf = requestAnimationFrame(draw);
+    };
+
+    const schedule = () => {
+      if (!raf) raf = requestAnimationFrame(draw);
+    };
+
     const onMove = (event: PointerEvent) => {
       pointer.x = event.clientX;
       pointer.y = event.clientY;
+      applyPosition();
       if (!visibleRef.current) {
         visibleRef.current = true;
         setVisible(true);
@@ -70,6 +113,7 @@ export function CustomCursor() {
           born: performance.now(),
           size: Math.min(5.5, 2 + speed * 0.12),
         });
+        schedule();
       }
     };
 
@@ -99,39 +143,17 @@ export function CustomCursor() {
     const onLeave = () => {
       visibleRef.current = false;
       setVisible(false);
+      points.length = 0;
+      cancelAnimationFrame(raf);
+      raf = 0;
+      ctx.clearRect(0, 0, width, height);
     };
     const onEnter = () => {
       visibleRef.current = true;
       setVisible(true);
     };
 
-    const draw = (now: number) => {
-      /*
-       * El aro va pegado al puntero, sin interpolación. Antes se quedaba
-       * atrás al mover el ratón y se veía lejos al hacer clic.
-       */
-      const position = `translate3d(${pointer.x}px, ${pointer.y}px, 0) translate(-50%, -50%)`;
-      dot.style.transform = position;
-      ring.style.transform = position;
-
-      ctx.clearRect(0, 0, width, height);
-      while (points.length && now - points[0].born > 280) points.shift();
-
-      for (let i = 0; i < points.length; i += 1) {
-        const point = points[i];
-        const age = (now - point.born) / 280;
-        const alpha = Math.max(0, 1 - age) * 0.5;
-        ctx.beginPath();
-        ctx.fillStyle =
-          i % 5 === 0
-            ? `rgba(255, 122, 102, ${alpha.toFixed(3)})`
-            : `rgba(230, 195, 106, ${alpha.toFixed(3)})`;
-        ctx.arc(point.x, point.y, point.size * (1 - age * 0.6), 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      raf = requestAnimationFrame(draw);
-    };
+    resize();
 
     window.addEventListener("pointermove", onMove, { passive: true });
     window.addEventListener("pointerover", onOver, { passive: true });
@@ -141,7 +163,6 @@ export function CustomCursor() {
     document.documentElement.addEventListener("pointerleave", onLeave);
     document.documentElement.addEventListener("pointerenter", onEnter);
     window.addEventListener("resize", resize);
-    raf = requestAnimationFrame(draw);
 
     return () => {
       cancelAnimationFrame(raf);

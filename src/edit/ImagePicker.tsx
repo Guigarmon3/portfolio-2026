@@ -5,6 +5,7 @@ import {
   type DragEvent,
 } from "react";
 import { createPortal } from "react-dom";
+import { useDialog } from "../hooks/useDialog";
 import { isSafeUrl, safeImageUrl } from "../lib/site";
 import { useEditor } from "./EditorContext";
 
@@ -43,19 +44,9 @@ export function ImagePicker() {
     };
   }, [imageRequest]);
 
-  useEffect(() => {
-    if (!imageRequest) return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closeImage();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previous;
-    };
-  }, [imageRequest, closeImage]);
+  const dialogRef = useDialog<HTMLDivElement>(closeImage, {
+    enabled: imageRequest !== null,
+  });
 
   if (!imageRequest) return null;
 
@@ -140,6 +131,8 @@ export function ImagePicker() {
       role="dialog"
       aria-modal="true"
       aria-labelledby="image-picker-title"
+      tabIndex={-1}
+      ref={dialogRef}
     >
       <div className="edit-modal__backdrop" onClick={closeImage} />
       <div className="edit-modal__card edit-image-picker">

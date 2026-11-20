@@ -39,7 +39,7 @@
         },
         {
           "label": "Instagram",
-          "url": "https://instagram.com/raspovio"
+          "url": "https://instagram.com/raspvio"
         }
       ]
     },
@@ -408,46 +408,131 @@
           "en": "Own projects · Self-taught"
         },
         "description": {
-          "es": "Diseño, programo y despliego mis propios productos: de la base de datos a la última animación. Stashly, Compra y Disfruta y MinedCounter son el resultado.",
-          "en": "I design, build and ship my own products: from the database to the last animation. Stashly, Compra y Disfruta and MinedCounter are the result."
+          "es": "Diseño, programo y despliego mis propios productos: de la base de datos a la última animación. OCTANT, Cripta, Garage Cloud, Meridiano y Stashly son el resultado.",
+          "en": "I design, build and ship my own products: from the database to the last animation. OCTANT, Cripta, Garage Cloud, Meridiano and Stashly are the result."
         }
       }
     ],
     "education": [
       {
         "id": "dam",
-        "year": "2025 -- Hoy",
+        "year": "2024 — 2026",
         "title": {
           "es": "2DAM · Desarrollo de Aplicaciones Multiplataforma",
           "en": "2DAM · Multiplatform Application Development"
         },
         "place": {
-          "es": "IES LA VEREDA - Grado Superior ",
-          "en": "IES LA VEREDA - Superior Grade "
+          "es": "Formación reglada · Valencia",
+          "en": "Formal education · Valencia"
         },
         "description": {
           "es": "Programación, bases de datos, entornos y desarrollo web. La base para pasar de los ejercicios a los productos.",
           "en": "Programming, databases, environments and web development. The foundation to move from exercises to products."
         }
-      },
-      {
-        "id": "education-1794364030636-tlyx9",
-        "year": "2024 - 2026",
-        "title": {
-          "es": "SMR · Sistemas Microinformaticos y Redes",
-          "en": "SMR · Microcomputer Systems and Networks"
-        },
-        "place": {
-          "es": "IES LA VEREDA - Grado Medio",
-          "en": "IES LA VEREDA -  Intermediate Level"
-        },
-        "description": {
-          "es": "Redes, mantenimiento, bases de datos, desarrollo web, entornos linux. Lo basico de todo para prepararme para futuros estudios",
-          "en": "Networking, maintenance, databases, web development, Linux environments. The basics of everything to prepare me for future studies"
-        }
       }
     ],
     "projects": [
+      {
+        "id": "octant",
+        "title": "OCTANT 01",
+        "year": "2026",
+        "category": {
+          "es": "Exhibición 3D · Web",
+          "en": "3D exhibition · Web"
+        },
+        "role": {
+          "es": "Diseño, 3D y desarrollo",
+          "en": "Design, 3D and development"
+        },
+        "stack": [
+          "React 19",
+          "three.js",
+          "WebGL",
+          "Vite",
+          "Lenis"
+        ],
+        "accent": "#FF3B1E",
+        "image": "/work/octant.jpg",
+        "subtitle": {
+          "es": "Anatomía de un reloj que no existe",
+          "en": "Anatomy of a watch that doesn't exist"
+        },
+        "summary": {
+          "es": "Una exhibición 3D sobre un reloj que solo existe en código. No hay modelos ni texturas descargadas: la caja, el dial, las agujas y la cámara se generan en tiempo real, y el scroll dirige el despiece mientras la pieza marca tu hora local.",
+          "en": "A 3D exhibition about a watch that only exists in code. There are no downloaded models or textures: the case, dial, hands and camera are generated in real time, and scrolling drives the teardown while the piece shows your local time."
+        },
+        "bullets": {
+          "es": [
+            "Geometría y materiales 100 % procedurales en three.js sobre WebGL2, sin un solo asset externo.",
+            "Seis planos de cámara encadenados por scroll que desmontan la pieza y vuelven a montarla.",
+            "Hora local real, ficha técnica en diálogo y el método de construcción descargable en PDF."
+          ],
+          "en": [
+            "100% procedural geometry and materials in three.js on WebGL2, with no external assets at all.",
+            "Six scroll-driven camera planes that take the piece apart and put it back together.",
+            "Real local time, a spec sheet in a dialog and the build method available as a PDF."
+          ]
+        },
+        "note": {
+          "es": "Incluye el método completo para construir una escena así.",
+          "en": "Includes the full method to build a scene like this."
+        },
+        "githubUrl": "https://github.com/Guigarmon3/octant-watch",
+        "externalUrl": "https://guigarmon3.online/octant/",
+        "linkMode": "external",
+        "featured": true,
+        "visible": true
+      },
+      {
+        "id": "cripta",
+        "title": "Cripta",
+        "year": "2026",
+        "category": {
+          "es": "Juego nativo · Rust",
+          "en": "Native game · Rust"
+        },
+        "role": {
+          "es": "Diseño, programación y arte procedural",
+          "en": "Design, programming and procedural art"
+        },
+        "stack": [
+          "Rust",
+          "macroquad",
+          "Pixel art",
+          "Audio procedural"
+        ],
+        "accent": "#8B5CF6",
+        "image": "/work/cripta.jpg",
+        "subtitle": {
+          "es": "Roguelite de mazmorra, de cero a release",
+          "en": "A dungeon roguelite, from scratch to release"
+        },
+        "summary": {
+          "es": "Un roguelite de mazmorra profunda con siete clases, progresión permanente y cada piso generado como una cámara de una necrópolis astral. Juego nativo, 100 % offline y portable: sin navegador, sin Electron y sin dependencias externas.",
+          "en": "A deep-dungeon roguelite with seven classes, permanent progression and every floor generated as a chamber of an astral necropolis. A native game, 100% offline and portable: no browser, no Electron and no external dependencies."
+        },
+        "bullets": {
+          "es": [
+            "26.000 líneas de Rust sobre macroquad: motor, UI, guardado y distribución sin dependencias de terceros.",
+            "Generación procedural de mazmorras, enemigos, pixel art y audio sintetizado en tiempo de ejecución.",
+            "Release v1.0.0 para Windows y Linux con guardado portable junto al ejecutable."
+          ],
+          "en": [
+            "26,000 lines of Rust on macroquad: engine, UI, saves and distribution with no third-party dependencies.",
+            "Procedural generation of dungeons, enemies, pixel art and audio synthesised at runtime.",
+            "v1.0.0 release for Windows and Linux with a portable save file next to the executable."
+          ]
+        },
+        "note": {
+          "es": "Código y descarga pública en GitHub.",
+          "en": "Public source and download on GitHub."
+        },
+        "githubUrl": "https://github.com/Guigarmon3/cripta",
+        "externalUrl": "https://github.com/Guigarmon3/cripta/releases/latest",
+        "linkMode": "external",
+        "featured": true,
+        "visible": true
+      },
       {
         "id": "garage-cloud",
         "title": "Garage Cloud",
@@ -470,6 +555,7 @@
           "Cheerio"
         ],
         "accent": "#82C7FF",
+        "image": "/work/garage-cloud.jpg",
         "subtitle": {
           "es": "Garaje de coches en Cloudflare",
           "en": "A car garage on Cloudflare"
@@ -498,8 +584,59 @@
         "externalUrl": "https://guigarmon3.online/coches/",
         "linkMode": "external",
         "featured": true,
-        "visible": true,
-        "image": "/work/garage-cloud.jpg"
+        "visible": true
+      },
+      {
+        "id": "meridiano",
+        "title": "Meridiano",
+        "year": "2026",
+        "category": {
+          "es": "Producto editorial · Datos",
+          "en": "Editorial product · Data"
+        },
+        "role": {
+          "es": "Diseño, datos y desarrollo",
+          "en": "Design, data and development"
+        },
+        "stack": [
+          "Python",
+          "FastAPI",
+          "JavaScript",
+          "PWA",
+          "Yahoo Finance",
+          "Binance"
+        ],
+        "accent": "#5EEAD4",
+        "image": "/work/meridiano.jpg",
+        "subtitle": {
+          "es": "El mercado, explicado",
+          "en": "The market, explained"
+        },
+        "summary": {
+          "es": "Un laboratorio de inversión gratuito, sin anuncios y sin registro: más de 120 activos con ficha, screener, cartera simulada y alertas que viven solo en el navegador. Cada precio, ratio y herramienta viene con su fórmula y su fuente.",
+          "en": "A free investment lab with no ads and no sign-up: over 120 assets with a profile, screener, paper portfolio and alerts that live only in your browser. Every price, ratio and tool comes with its formula and source."
+        },
+        "bullets": {
+          "es": [
+            "Snapshot diario de mercado con procedencia por dato y métricas explicadas paso a paso.",
+            "Cartera, watchlist y alertas en almacenamiento local: sin cuentas, sin servidor y sin telemetría.",
+            "Frontend estático que se publica dentro del portfolio en /investing y funciona como PWA."
+          ],
+          "en": [
+            "Daily market snapshot with per-datum provenance and metrics explained step by step.",
+            "Paper portfolio, watchlist and alerts in local storage: no accounts, no server and no telemetry.",
+            "Static frontend published inside the portfolio at /investing and installable as a PWA."
+          ]
+        },
+        "note": {
+          "es": "Gratis, sin registro y sin anuncios.",
+          "en": "Free, no sign-up and no ads."
+        },
+        "githubUrl": "https://github.com/Guigarmon3/meridiano",
+        "externalUrl": "https://guigarmon3.online/investing/",
+        "linkMode": "external",
+        "featured": true,
+        "visible": true
       },
       {
         "id": "stashly",
@@ -524,6 +661,7 @@
           "Cheerio"
         ],
         "accent": "#E6C36A",
+        "image": "",
         "subtitle": {
           "es": "Wishlist con scraping propio",
           "en": "Wishlist with its own scraper"
@@ -552,8 +690,7 @@
         "externalUrl": "",
         "linkMode": "none",
         "featured": true,
-        "visible": true,
-        "image": ""
+        "visible": true
       },
       {
         "id": "compra-y-disfruta",
@@ -574,6 +711,7 @@
           "Java"
         ],
         "accent": "#FF7A66",
+        "image": "",
         "subtitle": {
           "es": "Venta de entradas de cine con panel de administración",
           "en": "Cinema ticketing with an admin panel"
@@ -601,9 +739,8 @@
         "githubUrl": "https://github.com/Guigarmon3/COMPRA-Y-DISFRUTA",
         "externalUrl": "",
         "linkMode": "github",
-        "featured": true,
-        "visible": true,
-        "image": ""
+        "featured": false,
+        "visible": true
       },
       {
         "id": "minedcounter",
@@ -623,8 +760,9 @@
           "Gradle"
         ],
         "accent": "#82C7FF",
+        "image": "",
         "subtitle": {
-          "es": "Mod de Minecraft que cuenta los bloques que minas",
+          "es": "Mod de Minecraft que cuenta lo que minas",
           "en": "A Minecraft mod that counts what you mine"
         },
         "summary": {
@@ -650,9 +788,8 @@
         "githubUrl": "https://github.com/Guigarmon3/MinedCouter-1.21.8-forge",
         "externalUrl": "",
         "linkMode": "github",
-        "featured": true,
-        "visible": true,
-        "image": ""
+        "featured": false,
+        "visible": true
       }
     ],
     "settings": {
@@ -662,5 +799,5 @@
       "energy": "extra"
     }
   },
-  "updatedAt": "2026-11-14T14:40:56.130Z"
+  "updatedAt": "2026-11-20T18:49:42.187Z"
 }

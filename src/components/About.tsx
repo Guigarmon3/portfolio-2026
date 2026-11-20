@@ -76,7 +76,9 @@ export function About() {
           <div className="about__story">
             {t.about.paragraphs.map((paragraph, index) => (
               <p
-                key={paragraph}
+                /* Clave estable: al cambiar de idioma el nodo se reutiliza y
+                   conserva la clase is-in del revelado. */
+                key={index}
                 className={index === 0 ? "about__lead" : undefined}
                 data-reveal
               >
@@ -101,6 +103,8 @@ export function About() {
                 <img
                   src={portrait}
                   alt={`Retrato de ${data.profile.name}`}
+                  loading="lazy"
+                  decoding="async"
                 />
               ) : (
                 <span>{data.profile.mark}</span>

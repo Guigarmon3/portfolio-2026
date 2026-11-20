@@ -67,14 +67,23 @@ export function useSectionSnap(paused = false) {
 
       cancelRef.current?.();
       wheelAccumRef.current = 0;
-      lockRef.current = true;
       lastNavRef.current = performance.now();
+      setActiveIndex(target);
+
+      /* Con movimiento reducido no hay animación: salto directo. */
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        lockRef.current = false;
+        cancelRef.current = null;
+        window.scrollTo(0, block.offsetTop);
+        return;
+      }
+
+      lockRef.current = true;
       cancelRef.current = animateScrollTo(block.offsetTop, 880, () => {
         lockRef.current = false;
         cancelRef.current = null;
         setActiveIndex(target);
       });
-      setActiveIndex(target);
     },
     [setActiveIndex],
   );
@@ -160,6 +169,8 @@ export function useSectionSnap(paused = false) {
 
     const onWheel = (event: WheelEvent) => {
       if (!enabledRef.current) return;
+      /* Ctrl/Cmd + rueda es zoom del navegador: no lo interceptamos. */
+      if (event.ctrlKey || event.metaKey) return;
       if (
         document.documentElement.classList.contains("is-locked") ||
         document.documentElement.classList.contains("is-loading")
@@ -203,6 +214,11 @@ export function useSectionSnap(paused = false) {
           target.tagName === "SELECT" ||
           target.isContentEditable)
       ) {
+        return;
+      }
+
+      /* Espacio sobre un botón debe activarlo, no mover la página. */
+      if (event.key === " " && target?.closest("button, [role='button'], summary")) {
         return;
       }
 

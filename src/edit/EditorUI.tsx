@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useSite } from "../lib/site";
+import { useDialog } from "../hooks/useDialog";
 import { useEditor } from "./EditorContext";
 import { LoginGate } from "./LoginGate";
 import { ImagePicker } from "./ImagePicker";
@@ -188,19 +189,7 @@ function EditorDrawer({ target }: { target: EditorTarget }) {
   const { data, dirty, saving, save } = useSite();
   const { close } = useEditor();
   const { eyebrow, title } = targetLabel(target, data);
-
-  useEffect(() => {
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") close();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previous;
-    };
-  }, [close]);
+  const drawerRef = useDialog<HTMLDivElement>(close);
 
   return createPortal(
     <div
@@ -208,6 +197,8 @@ function EditorDrawer({ target }: { target: EditorTarget }) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="edit-drawer-title"
+      tabIndex={-1}
+      ref={drawerRef}
     >
       <div className="edit-drawer__backdrop" onClick={close} />
       <aside className="edit-drawer__panel">

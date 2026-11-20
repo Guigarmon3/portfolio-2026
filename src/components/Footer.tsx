@@ -1,19 +1,19 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useLang } from "../lib/lang";
+import { formatMadridTime } from "../lib/time";
 import { scrollToBlock } from "../lib/scroll";
 import { useEditor } from "../edit/EditorContext";
+
+const loadMadeOfModal = () => import("./MadeOfModal");
+const MadeOfModal = lazy(() =>
+  loadMadeOfModal().then((module) => ({ default: module.MadeOfModal })),
+);
 
 function useMadridTime() {
   const [time, setTime] = useState("");
 
   useEffect(() => {
-    const format = () =>
-      new Intl.DateTimeFormat("es-ES", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-        timeZone: "Europe/Madrid",
-      }).format(new Date());
+    const format = () => formatMadridTime();
 
     setTime(format());
     const id = window.setInterval(() => setTime(format()), 20_000);
@@ -24,9 +24,11 @@ function useMadridTime() {
 }
 
 export function Footer() {
-  const { t } = useLang();
+  const { lang, t } = useLang();
   const { editing, requestEdit, open } = useEditor();
   const time = useMadridTime();
+  const [madeOpen, setMadeOpen] = useState(false);
+  const madeLabel = lang === "es" ? "Cómo está hecha" : "How it's built";
 
   return (
     <footer className="footer">
@@ -34,6 +36,53 @@ export function Footer() {
         <div className="footer__group">
           <p className="footer__note">{t.footer.rights}</p>
           <p className="footer__note">{t.footer.built}</p>
+
+          <button
+            type="button"
+            className="footer__made"
+            aria-haspopup="dialog"
+            onClick={() => setMadeOpen(true)}
+            onPointerEnter={() => void loadMadeOfModal()}
+            onFocus={() => void loadMadeOfModal()}
+            data-cursor
+            data-cursor-label={madeLabel}
+          >
+            <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <rect
+                x="2"
+                y="2"
+                width="5"
+                height="5"
+                stroke="currentColor"
+                strokeWidth="1.1"
+              />
+              <rect
+                x="9"
+                y="2"
+                width="5"
+                height="5"
+                stroke="currentColor"
+                strokeWidth="1.1"
+              />
+              <rect
+                x="2"
+                y="9"
+                width="5"
+                height="5"
+                stroke="currentColor"
+                strokeWidth="1.1"
+              />
+              <path
+                d="M9 11.5h5M11.5 9v5"
+                stroke="currentColor"
+                strokeWidth="1.1"
+              />
+            </svg>
+            {madeLabel}
+            <span className="footer__made-arrow" aria-hidden="true">
+              ↗
+            </span>
+          </button>
         </div>
 
         <div className="footer__group">
@@ -88,6 +137,12 @@ export function Footer() {
           </button>
         </div>
       </div>
+
+      {madeOpen && (
+        <Suspense fallback={null}>
+          <MadeOfModal onClose={() => setMadeOpen(false)} />
+        </Suspense>
+      )}
     </footer>
   );
 }

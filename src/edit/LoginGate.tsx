@@ -1,5 +1,6 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
+import { useDialog } from "../hooks/useDialog";
 import { useEditor } from "./EditorContext";
 
 type Step = "password" | "code";
@@ -14,19 +15,7 @@ export function LoginGate() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
-
-  useEffect(() => {
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closeGate();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previous;
-    };
-  }, [closeGate]);
+  const gateRef = useDialog<HTMLDivElement>(closeGate);
 
   const requestCode = async (event?: FormEvent) => {
     event?.preventDefault();
@@ -105,6 +94,8 @@ export function LoginGate() {
       role="dialog"
       aria-modal="true"
       aria-labelledby="edit-gate-title"
+      tabIndex={-1}
+      ref={gateRef}
     >
       <div className="edit-modal__backdrop" onClick={closeGate} />
       <div className="edit-modal__card edit-gate__card">
